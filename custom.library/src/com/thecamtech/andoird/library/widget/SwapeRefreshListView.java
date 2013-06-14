@@ -139,6 +139,7 @@ public class SwapeRefreshListView extends ListView {
 		}
 
 		initView();
+		setSaveEnabled(true);
 	}
 
 	public void initView() {
