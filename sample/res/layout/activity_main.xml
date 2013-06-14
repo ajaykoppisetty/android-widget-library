@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:enabled="true"
+        app:progressBar="@layout/pull_refresh_progressbar"
         app:refreshContainerId="@+id/textview"
         app:refreshLayout="@layout/pull_refresh_message"
         app:progressBackground="@android:color/black" />

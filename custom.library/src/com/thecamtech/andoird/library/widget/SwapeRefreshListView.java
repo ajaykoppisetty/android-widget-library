@@ -348,15 +348,22 @@ public class SwapeRefreshListView extends ListView {
 		private View mRefreshContent;
 		private int mProgressWidth;
 		private int mScreenWidth;
+		private int mMultiply;
 
 		public PullRefreshViewGroup(Context context) {
 			super(context);
 			mProgressWidth = 0;
 			mScreenWidth = getContext().getResources().getDisplayMetrics().widthPixels;
+			int height = getContext().getResources().getDisplayMetrics().heightPixels;
+			if (height < mScreenWidth) {
+				mMultiply = 10;
+			}else{
+				mMultiply = 2;
+			}
 		}
 
 		private void setWidth(int width) {
-			mProgressWidth = width * 2;
+			mProgressWidth = width * mMultiply;
 			if (!mProgressing && mProgressWidth >= mScreenWidth) {
 				mProgressing = true;
 				mShouldUpdateProgress = false;
@@ -375,7 +382,7 @@ public class SwapeRefreshListView extends ListView {
 		}
 
 		private int getWidht() {
-			return mProgressWidth / 2;
+			return mProgressWidth / mMultiply;
 		}
 
 		@Override
