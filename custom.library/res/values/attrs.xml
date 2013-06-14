@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+     <declare-styleable name="AppTheme">
+        <attr name="swapeRefreshListViewStyle" format="reference" />
+        <attr name="swapeRefreshListViewProgressBarStyle" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="SwapeRefreshListView">
+        <attr name="refreshLayout" format="reference" />
+        <attr name="refreshContainerId" format="reference" />
+        <attr name="progressBackground" format="reference" />
+        <attr name="progressHeight" format="dimension|reference" />
+        <attr name="progressBar" format="reference" />
+        <attr name="enabled" format="boolean" />
+    </declare-styleable>
+
+</resources>

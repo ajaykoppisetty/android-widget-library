@@ -1,0 +1,17 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res/com.example.custom.view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity" >
+
+    <com.thecamtech.andoird.library.widget.SwapeRefreshListView
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:enabled="true"
+        app:refreshContainerId="@+id/textview"
+        app:refreshLayout="@layout/pull_refresh_message"
+        app:progressBackground="@android:color/black" />
+
+</RelativeLayout>
