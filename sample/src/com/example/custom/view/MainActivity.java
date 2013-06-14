@@ -30,7 +30,7 @@ public class MainActivity extends Activity {
 
 		mListView.setOnRefreshListener(new OnRefreshListener() {
 			@Override
-			public boolean onRefresh(View view) {
+			public boolean onRefresh(View view, boolean isRestoreState) {
 				view.postDelayed(new Runnable() {
 					@Override
 					public void run() {

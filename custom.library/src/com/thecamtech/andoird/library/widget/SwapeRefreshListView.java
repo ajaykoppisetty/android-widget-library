@@ -6,6 +6,8 @@ import android.content.res.TypedArray;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.ViewConfigurationCompat;
 import android.util.AttributeSet;
@@ -29,6 +31,10 @@ import com.thecamtech.andoird.library.R;
 
 public class SwapeRefreshListView extends ListView {
 
+	public static enum STATUS {
+		DRAGED, REFRESHED, IDLE
+	};
+
 	private float mDownPositionY = 0;
 	private float mDragPositionY;
 	private float mLastPositionY;
@@ -37,7 +43,6 @@ public class SwapeRefreshListView extends ListView {
 	private boolean mBeginDrag;
 	private boolean mItemIsOnTop;
 	private boolean mShouldUpdateProgress;
-	private boolean mProgressing;
 
 	private ProgressBar mHosizontalProgressBar;
 	private View mRefreshView;
@@ -58,6 +63,8 @@ public class SwapeRefreshListView extends ListView {
 
 	private Handler mHander = new Handler();
 	private Scroller mScroller;
+
+	private STATUS mStatus;
 
 	private Runnable mProgressDecrease = new Runnable() {
 		@Override
@@ -135,6 +142,7 @@ public class SwapeRefreshListView extends ListView {
 	}
 
 	public void initView() {
+		mStatus = STATUS.IDLE;
 
 		WindowManager.LayoutParams windowParams = new WindowManager.LayoutParams();
 		windowParams.gravity = Gravity.TOP | Gravity.LEFT;
@@ -246,7 +254,7 @@ public class SwapeRefreshListView extends ListView {
 	}
 
 	private boolean touch(MotionEvent event) {
-		if (mIsRefreshAble && !mProgressing) {
+		if (mIsRefreshAble && mStatus != STATUS.REFRESHED) {
 			int action = event.getAction();
 
 			switch (action & MotionEventCompat.ACTION_MASK) {
@@ -276,6 +284,7 @@ public class SwapeRefreshListView extends ListView {
 				if (distance > 0 && event.getY() - mDownPositionY > mTouchSlop
 						&& mItemIsOnTop) {
 					if (!mBeginDrag) {
+						mStatus = STATUS.DRAGED;
 						if (!mScroller.isFinished()) {
 							mScroller.abortAnimation();
 						}
@@ -316,7 +325,7 @@ public class SwapeRefreshListView extends ListView {
 	}
 
 	public void doneLoading() {
-		mProgressing = false;
+		mStatus = STATUS.IDLE;
 		resetRefresh();
 	}
 
@@ -337,8 +346,35 @@ public class SwapeRefreshListView extends ListView {
 		mLastPositionY = 0;
 		mItemIsOnTop = false;
 		mShouldUpdateProgress = false;
-		if (!mProgressing && mHosizontalProgressBar != null) {
+		if (mStatus != STATUS.REFRESHED && mHosizontalProgressBar != null) {
 			mHosizontalProgressBar.setVisibility(View.GONE);
+		}
+	}
+
+	@Override
+	public Parcelable onSaveInstanceState() {
+		Parcelable superState = super.onSaveInstanceState();
+
+		StatusState ss = new StatusState(superState);
+		ss.status = this.mStatus.ordinal();
+
+		return ss;
+	}
+
+	@Override
+	public void onRestoreInstanceState(Parcelable state) {
+		if (!(state instanceof StatusState)) {
+			super.onRestoreInstanceState(state);
+			return;
+		}
+
+		StatusState ss = (StatusState) state;
+		super.onRestoreInstanceState(ss.getSuperState());
+
+		this.mStatus = STATUS.values()[ss.status];
+		if (this.mStatus == STATUS.REFRESHED) {
+			mHosizontalProgressBar.setVisibility(View.VISIBLE);
+			mOnRefreshListener.onRefresh(mRefreshView, true);
 		}
 	}
 
@@ -357,19 +393,20 @@ public class SwapeRefreshListView extends ListView {
 			int height = getContext().getResources().getDisplayMetrics().heightPixels;
 			if (height < mScreenWidth) {
 				mMultiply = 10;
-			}else{
+			} else {
 				mMultiply = 2;
 			}
 		}
 
 		private void setWidth(int width) {
 			mProgressWidth = width * mMultiply;
-			if (!mProgressing && mProgressWidth >= mScreenWidth) {
-				mProgressing = true;
+			if (mStatus != STATUS.REFRESHED && mProgressWidth >= mScreenWidth) {
+				mStatus = STATUS.REFRESHED;
 				mShouldUpdateProgress = false;
 				boolean showProgressBar = mHosizontalProgressBar != null;
 				if (mOnRefreshListener != null) {
-					boolean bool = mOnRefreshListener.onRefresh(mRefreshView);
+					boolean bool = mOnRefreshListener.onRefresh(mRefreshView,
+							false);
 					showProgressBar = showProgressBar && bool;
 				}
 				if (showProgressBar) {
@@ -430,8 +467,38 @@ public class SwapeRefreshListView extends ListView {
 
 		public void onBeginDrag(View view);
 
-		public boolean onRefresh(View view);
+		public boolean onRefresh(View view, boolean isRestoreState);
 
 	}
 
+	static class StatusState extends BaseSavedState {
+
+		int status;
+
+		StatusState(Parcelable superState) {
+			super(superState);
+		}
+
+		private StatusState(Parcel in) {
+			super(in);
+			this.status = in.readInt();
+		}
+
+		@Override
+		public void writeToParcel(Parcel out, int flags) {
+			super.writeToParcel(out, flags);
+			out.writeInt(this.status);
+		}
+
+		// required field that makes Parcelables from a Parcel
+		public static final Parcelable.Creator<StatusState> CREATOR = new Parcelable.Creator<StatusState>() {
+			public StatusState createFromParcel(Parcel in) {
+				return new StatusState(in);
+			}
+
+			public StatusState[] newArray(int size) {
+				return new StatusState[size];
+			}
+		};
+	}
 }
